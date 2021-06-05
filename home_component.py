@@ -34,7 +34,10 @@ LOOP_TIME = 20
 ser = serial.Serial('/dev/ttyS0', 115200)
 
 # checks the car space
-def checkSpace():
+# firstCall is a bool indicating whether the function has been recursively called yet.
+# most errors are handled by recalling the function after half a second
+# if that doesn't clear the error, the function returns and will be called again in due time
+def checkSpace(firstCall):
     # open the serial port for the lidar if it is not already open
     if (ser.is_open == False):
         ser.open()
@@ -59,8 +62,9 @@ def checkSpace():
         ser.reset_input_buffer()
 
         return distance
-    else:
-        checkSpace()
+    elif (firstCall):
+        time.sleep(0.5)
+        checkSpace(False)
 
 # main function for the program that will loop
 def main():
@@ -80,7 +84,7 @@ def main():
             # loop while the mobile component is in zone
             while (inZone):
                 # check the distance from the device to the nearest object
-                carDistance = checkSpace()
+                carDistance = checkSpace(True)
                 # switch on the result
                 if (carDistance > NOTHING_DISTANCE):
                     # send space available
